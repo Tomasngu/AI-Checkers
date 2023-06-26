@@ -10,6 +10,7 @@ from game.config import SizeConstants as const
 
 class Board:
     """Class representing game board of checkers"""
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, rows: int, cols: int, cell_width: int, radius: int) -> None:
         self.rows = rows
@@ -19,7 +20,6 @@ class Board:
         self.black_count = 0
         self.winner = None
 
-        # self.grid = np.zeros((rows, cols))
         self.grid = np.zeros((rows, cols), dtype=np.int8)
         self.cell_width = cell_width
         self.circle_radius = radius
@@ -44,6 +44,7 @@ class Board:
                     self.white_count += 1
 
     def draw_piece(self, screen, row, col, color) -> None:
+        """Draw given piece on screen"""
         if color == StoneEnum.WHITE.value:
             img = StoneImages.WHITE_STONE
         elif color == StoneEnum.WHITE_KING.value:
@@ -60,17 +61,22 @@ class Board:
         screen.blit(img, (x_stone, y_stone))
 
     def highlight_prev(self, screen):
+        """Highlight previous move"""
         if self.square is not None:
-            pygame.draw.rect(screen, Colors.YELLOW, (self.square[1]*self.cell_width, self.square[0]*self.cell_width,
-                                                     self.cell_width, self.cell_width))
-            pygame.draw.rect(screen, Colors.YELLOW, (self.previous_square[1]*self.cell_width, self.previous_square[0]*self.cell_width,
-                                                     self.cell_width, self.cell_width))
+            pygame.draw.rect(screen, Colors.YELLOW, (self.square[1]*self.cell_width,
+                                                    self.square[0]*self.cell_width,
+                                                    self.cell_width, self.cell_width))
+            pygame.draw.rect(screen, Colors.YELLOW, (self.previous_square[1]*self.cell_width,
+                                                    self.previous_square[0]*self.cell_width,
+                                                    self.cell_width, self.cell_width))
 
     def highlight(self, screen, row: int, col: int):
+        """Highlight given square"""
         pygame.draw.rect(screen, Colors.YELLOW, (col*self.cell_width,
                          row*self.cell_width, self.cell_width, self.cell_width))
 
     def draw_pieces(self, screen):
+        """Draw all pieces"""
         for row in range(self.rows):
             for col in range(self.cols):
                 if self.grid[row][col] != 0:
@@ -82,6 +88,7 @@ class Board:
         self.highlight_prev(screen)
 
     def draw_valid_moves(self, screen, valid_moves):
+        """Draw all valid moves on screen"""
         for move, _ in valid_moves:
             row, col = move
             pygame.draw.circle(screen, Colors.BLUE, (col * self.cell_width + self.cell_width //
@@ -97,12 +104,15 @@ class Board:
                                                  self.cell_width, self.cell_width))
 
     def get_piece(self, row, col):
+        """Retrieve piece"""
         return self.grid[row, col]
 
     def get_winner(self):
+        """Get winner color"""
         return self.winner
 
     def valid_square(self, row, col) -> bool:
+        """Check if (row, col) is a valid square on board"""
         if row < 0 or row >= self.rows:
             return False
         if col < 0 or col >= self.cols:
@@ -110,6 +120,7 @@ class Board:
         return True
 
     def apply_move(self, row: int, col: int, new_row: int, new_col: int, captured_pieces) -> None:
+        # pylint: disable=too-many-arguments
         """Moves piece from old position to new position"""
         piece = self.grid[row, col]
         self.grid[new_row, new_col] = piece
@@ -126,6 +137,7 @@ class Board:
             self.grid[new_row, new_col] += 2
 
     def remove_captured(self, captured_pieces):
+        """Remove given pieces from board"""
         for cap in captured_pieces:
             self.remove_piece(*cap)
 
@@ -142,27 +154,30 @@ class Board:
         self.grid[row, col] = 0
 
     def get_dirs(self, color):
+        """Get movable directions for given piece color"""
         white_dirs = [(-1, 1), (-1, -1)]
         black_dirs = [(1, 1), (1, -1)]
         if color > 2:
             return white_dirs + black_dirs
         if color == StoneEnum.WHITE.value:
             return white_dirs
-        elif color == StoneEnum.BLACK.value:
+        if color == StoneEnum.BLACK.value:
             return black_dirs
         assert False
 
     def is_opponent(self, piece, other):
+        """Check if is opponent"""
         if other == 0:
             return False
-        if piece == StoneEnum.WHITE.value or piece == StoneEnum.WHITE_KING.value:
+        if piece in (StoneEnum.WHITE.value, StoneEnum.WHITE_KING.value):
             return other in (StoneEnum.BLACK.value, StoneEnum.BLACK_KING.value)
-        if piece == StoneEnum.BLACK.value or piece == StoneEnum.BLACK_KING.value:
+        if piece in (StoneEnum.BLACK.value, StoneEnum.BLACK_KING.value):
             return other in (StoneEnum.WHITE.value, StoneEnum.WHITE_KING.value)
         assert False
 
     def get_valid_moves_all_pieces(self, color):
-        assert (color == StoneEnum.WHITE.value or color == StoneEnum.BLACK.value)
+        """Get valid moves for given player color"""
+        assert color in (StoneEnum.WHITE.value, StoneEnum.BLACK.value)
 
         all_valid_moves = {}
         max_captures = 0
@@ -190,7 +205,10 @@ class Board:
                 all_valid_moves[king_piece] = king_valid_moves
         return all_valid_moves
 
-    def get_valid_moves(self, row: int, col: int, piece_type: int, has_captured=False, captured_pieces=None):
+    def get_valid_moves(self, row: int, col: int, piece_type: int,
+                         has_captured=False, captured_pieces=None):
+        # pylint: disable=too-many-arguments, too-many-branches
+        """Get all valid moves for given piece"""
         if captured_pieces is None:
             captured_pieces = []
 
@@ -208,9 +226,11 @@ class Board:
         for (dir_row, dir_col) in dirs:
             if not self.valid_square(row + 2*dir_row, col + 2*dir_col):
                 continue
-            if (self.is_opponent(piece_type, self.grid[row + dir_row, col + dir_col]) and  # capturing an opponent piece and landing on empty square
+            # capturing an opponent piece and landing on empty square
+            if (self.is_opponent(piece_type, self.grid[row + dir_row, col + dir_col]) and
                     self.grid[row + 2*dir_row, col + 2*dir_col] == 0):
-                if (row + dir_row, col + dir_col) in captured_pieces:  # has already captured the piece
+                # has already captured the piece
+                if (row + dir_row, col + dir_col) in captured_pieces:
                     continue
                 captured_pieces.append((row + dir_row, col + dir_col))
                 # want moves with more captures

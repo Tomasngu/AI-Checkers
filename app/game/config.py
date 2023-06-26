@@ -12,8 +12,16 @@ class SizeConstants:
     STONE_OFFSET = (CELL_SIZE-STONE_SIZE)//2
     CIRCLE_RADIUS = int(CELL_SIZE * 0.2)
 
-# pygame.font.init()
-# WINNER_FONT = pygame.font.SysFont('comicsans', 100)
+pygame.font.init()
+WINNER_FONT = pygame.font.SysFont('comicsans', 100)
+
+class Menu:
+    "Namespace class for Menu assets"
+    # pylint: disable=too-few-public-methods
+    TITLE_FONT = pygame.font.Font("app/assets/PressStart2P-Regular.ttf", 65)
+    MENU_FONT = pygame.font.Font(None, 50)
+    BACKGROUND = pygame.transform.scale(
+        pygame.image.load('app/assets/Background.png'), (SizeConstants.WIDTH, SizeConstants.HEIGHT))
 
 class Colors:
     "Namespace class for colors"
@@ -24,6 +32,7 @@ class Colors:
     BROWN = (78, 53, 36)
     BLUE = (100, 149, 237)
     YELLOW = (187,203,43)
+    GRAY = (128, 128, 128)
 
 class StoneEnum(Enum):
     "Enum class to indicate pieces"
