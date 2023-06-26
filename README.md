@@ -12,3 +12,5 @@ pytest
 ```
 
 ![alt text](menu.png "image")
+
+![alt text](game.png "image")
